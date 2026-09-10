@@ -68,16 +68,16 @@ h4 { font-size: var(--t-16); letter-spacing: -0.02em; }
 p { margin: 0 0 1em; text-wrap: pretty; }
 p:last-child { margin-bottom: 0; }
 
-a { color: var(--cyan); text-decoration: none; }
-a:hover { color: var(--cyan-hi); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hi); }
 
 :where(a, button, input, [tabindex]):focus-visible {
-  outline: 1px solid var(--cyan);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--r-xs);
 }
 
-::selection { background: var(--cyan-tint); color: #fff; }
+::selection { background: var(--accent-tint); color: #fff; }
 
 * { scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -288,7 +288,7 @@ a:hover { color: var(--cyan-hi); }
 
 .page-nav-tab.active {
   color: var(--ink);
-  border-bottom-color: var(--cyan);
+  border-bottom-color: var(--accent);
 }
 
 /* ── Shell ────────────────────────────────────────────────────────────────────
@@ -392,7 +392,7 @@ a:hover { color: var(--cyan-hi); }
 
 .hero-title { margin-bottom: 24px; }
 
-/* Gold, not cyan. Cyan is the action colour and a headline is not an action —
+/* Gold, not mint. Mint is the action colour and a headline is not an action —
    using it here is what makes an accent stop meaning anything. */
 .hero-title .accent { color: var(--gold); -webkit-text-stroke: 0; }
 
@@ -432,13 +432,13 @@ a:hover { color: var(--cyan-hi); }
   letter-spacing: 0.01em;
   text-transform: uppercase;
   color: #041220;
-  background: var(--cyan);
+  background: var(--accent);
   cursor: pointer;
   transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 
-.action-btn:hover:not(:disabled) { background: var(--cyan-hi); }
-.action-btn:active:not(:disabled) { background: var(--cyan-dim); }
+.action-btn:hover:not(:disabled) { background: var(--accent-hi); }
+.action-btn:active:not(:disabled) { background: var(--accent-dim); }
 
 .action-btn:disabled {
   background: transparent;
@@ -584,7 +584,7 @@ a:hover { color: var(--cyan-hi); }
   transition: border-color var(--t-fast) var(--ease);
 }
 
-.input-wrapper:focus-within { border-color: var(--cyan); }
+.input-wrapper:focus-within { border-color: var(--accent); }
 
 .token-input {
   flex: 1;
@@ -644,7 +644,7 @@ a:hover { color: var(--cyan-hi); }
 }
 
 .info-value { color: var(--ink-2); font-size: var(--t-13); text-align: right; min-width: 0; }
-.info-value.is-accent { color: var(--cyan); }
+.info-value.is-accent { color: var(--accent); }
 .info-value.is-earned { color: var(--gold-hi); }
 
 /* The notice under each panel. A quiet rule-and-text line, not a tinted box. */
@@ -819,7 +819,7 @@ a:hover { color: var(--cyan-hi); }
 .step-number {
   font-family: var(--font-mono);
   font-size: var(--t-12);
-  color: var(--cyan);
+  color: var(--accent);
   margin-bottom: 14px;
 }
 
@@ -958,7 +958,7 @@ a:hover { color: var(--cyan-hi); }
   height: 26px;
   border-radius: 50%;
   border: 1px solid var(--hair-2);
-  border-top-color: var(--cyan);
+  border-top-color: var(--accent);
   animation: spin 700ms linear infinite;
 }
 
@@ -974,7 +974,7 @@ a:hover { color: var(--cyan-hi); }
 
 /* ── Wallet control ──────────────────────────────────────────────────────────
    Our markup (components/layout/WalletButton), so it can use the same horn cut,
-   the same flat cyan and the same mono figures as everything else. RainbowKit
+   the same flat mint and the same mono figures as everything else. RainbowKit
    only supplies the state and the modals. */
 .wallet {
   display: flex;
@@ -990,7 +990,7 @@ a:hover { color: var(--cyan-hi); }
   padding: 9px 18px;
   border: 1px solid transparent;
   clip-path: polygon(0 0, calc(100% - var(--chamfer-sm)) 0, 100% var(--chamfer-sm), 100% 100%, 0 100%);
-  background: var(--cyan);
+  background: var(--accent);
   color: #041220;
   font-family: inherit;
   font-size: var(--t-13);
@@ -1003,13 +1003,13 @@ a:hover { color: var(--cyan-hi); }
   transition: background var(--t-fast) var(--ease);
 }
 
-.wallet-connect:hover { background: var(--cyan-hi); }
-.wallet-connect:active { background: var(--cyan-dim); }
+.wallet-connect:hover { background: var(--accent-hi); }
+.wallet-connect:active { background: var(--accent-dim); }
 
 /* Clipped elements cannot paint an outline, so the focus ring goes inside. */
 .wallet-connect:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px #041220, inset 0 0 0 4px var(--cyan-hi);
+  box-shadow: inset 0 0 0 2px #041220, inset 0 0 0 4px var(--accent-hi);
 }
 
 /* A wrong network is a blocker, not a decoration — it takes the error colour
@@ -1114,7 +1114,7 @@ a:hover { color: var(--cyan-hi); }
   --rk-colors-actionButtonSecondaryBackground: var(--surface-3);
   --rk-colors-closeButton: var(--ink-3);
   --rk-colors-closeButtonBackground: var(--surface-3);
-  --rk-colors-selectedOptionBorder: var(--cyan-tint);
+  --rk-colors-selectedOptionBorder: var(--accent-tint);
   --rk-colors-connectionIndicator: var(--green);
   --rk-colors-error: var(--red);
   --rk-colors-standby: var(--gold);
@@ -1228,8 +1228,8 @@ a:hover { color: var(--cyan-hi); }
 
 .crash-btn {
   padding: 11px 18px;
-  background: var(--cyan);
-  border: 1px solid var(--cyan);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   color: #041220;
   font-family: var(--font-mono);
   font-size: var(--t-12);
@@ -1239,7 +1239,7 @@ a:hover { color: var(--cyan-hi); }
   transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
-.crash-btn:hover { background: var(--cyan-hi); border-color: var(--cyan-hi); }
+.crash-btn:hover { background: var(--accent-hi); border-color: var(--accent-hi); }
 
 .crash-btn.is-ghost {
   background: transparent;

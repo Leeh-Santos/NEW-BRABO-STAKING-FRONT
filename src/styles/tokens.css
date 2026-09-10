@@ -32,19 +32,35 @@
   --ink-2: #9db4ce;
   --ink-3: #627893;
 
-  /* Accents. Cyan is the only action colour; gold is never a control. */
-  --cyan: #38c0f8;
-  --cyan-hi: #7fdcff;
-  --cyan-dim: #1a8fc9;
-  --cyan-tint: rgba(56, 192, 248, 0.16);
-  --cyan-tint-soft: rgba(56, 192, 248, 0.07);
+  /* Accents. One action colour; gold is never a control.
+   *
+   * This is where Brabo Staking parts company with Brabo Markets. Markets takes
+   * its action colour straight from the bull's cyan eyes (#38c0f8). Staking
+   * takes the same eye colour and walks it toward mint — a sibling hue, not a
+   * new identity, so the two products read as one family seen from two angles
+   * rather than as one product cloned. Everything else in this file is shared.
+   *
+   * Named `--accent`, not `--mint`: the whole point of the divergence is that
+   * this slot is the product's own, so the token says what it is *for* rather
+   * than what colour it happens to hold. */
+  --accent: #2fd4b6;
+  --accent-hi: #6fe8d2;
+  --accent-dim: #1a9e86;
+  --accent-tint: rgba(47, 212, 182, 0.16);
+  --accent-tint-soft: rgba(47, 212, 182, 0.07);
   --gold: #e0a860;
   --gold-hi: #f2cb92;
   --gold-tint: rgba(224, 168, 96, 0.13);
 
-  /* Semantic */
-  --green: #34d399;
-  --green-tint: rgba(52, 211, 153, 0.12);
+  /* Semantic.
+   *
+   * Markets' success green is #34d399 — 8° of hue from the mint above, which is
+   * close enough that "this control is actionable" and "this thing succeeded"
+   * would read as the same colour. Pushed to a leafier green (26° away, and
+   * lighter) so the two stay tellable apart on the small elements that carry it:
+   * the live dot, the verified badge, the success toast rule. */
+  --green: #4ade80;
+  --green-tint: rgba(74, 222, 128, 0.12);
   --red: #fb7185;
   --amber: #fbbf24;
 

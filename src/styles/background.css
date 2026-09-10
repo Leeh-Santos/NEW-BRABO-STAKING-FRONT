@@ -27,7 +27,7 @@
   width: 85vmax;
   height: 85vmax;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(56, 192, 248, 0.07) 0%, rgba(56, 192, 248, 0) 60%);
+  background: radial-gradient(circle, rgba(47, 212, 182, 0.07) 0%, rgba(47, 212, 182, 0) 60%);
   animation: drift-a 40s var(--ease) infinite alternate;
   will-change: transform;
 }
@@ -91,7 +91,7 @@
   .ambient::after { animation: none; }
 }
 
-/* The live candlestick field (components/ui/MarketField).
+/* The live accrual field (components/ui/AccrualField).
  *
  * These rules are load-bearing, not cosmetic. A <canvas> with no CSS size takes
  * its layout size from its own `width`/`height` attributes — and the component
@@ -105,17 +105,17 @@
  * shows up on scaled displays (Windows at 125% / 150%, HiDPI laptops).
  *
  * `position: fixed` + `inset: 0` makes the used size come from the viewport, so
- * the attributes can never drive layout. MarketField also clamps to the
+ * the attributes can never drive layout. AccrualField also clamps to the
  * viewport as a second line of defence. */
-.market-field {
+.accrual-field {
   position: fixed;
   inset: 0;
   z-index: -1;
   display: block;
-  /* One pitch of overhang past the right edge. MarketField drifts the field by
+  /* One pitch of overhang past the right edge. AccrualField drifts the field by
      translating this element rather than redrawing it, and the overhang is the
      material that slides in — without it the right edge would show a gap. */
-  width: calc(100% + 26px);
+  width: calc(100% + 22px);
   height: 100%;
   pointer-events: none;
   will-change: transform;

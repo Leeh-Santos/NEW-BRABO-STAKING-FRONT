@@ -48,10 +48,29 @@ src/
 ## Design system
 
 Ported from Brabo Markets (`reference-brabo-ux/`) so the two products read as one
-family: identity from the bull (navy ground, cyan eyes, gold horns); structure
-from morpho.org — depth comes from hairline borders on flat fills, never shadows
-or gradients; one accent colour used sparingly; wide Archivo display type; every
+family: identity from the bull (navy ground, gold horns); structure from
+morpho.org — depth comes from hairline borders on flat fills, never shadows or
+gradients; one accent colour used sparingly; wide Archivo display type; every
 figure in JetBrains Mono, tabular.
+
+**Where Staking diverges from Markets** — deliberately, and only here:
+
+| | Markets | Staking |
+| --- | --- | --- |
+| Action colour | cyan `#38c0f8` (the bull's eyes) | mint `#2fd4b6` (`--accent`) |
+| Success green | `#34d399` | `#4ade80` — pushed 26° away so it doesn't read as the mint |
+| Backdrop | candlestick field | accrual curve (`AccrualField`) |
+
+Everything else — layout, spacing, type, grids, the shell, the horn cut, and
+gold-means-earned — is shared and should stay shared. The accent token is named
+`--accent`, not `--mint`, because the slot is the product's own; don't hard-code
+the hex anywhere but `tokens.css` (`App.tsx` mirrors it once for RainbowKit's
+own modal theme, which cannot read CSS variables).
+
+Markets stands on a candlestick field because it is a trading product. Staking
+does not trade — nothing here ticks up and down against you, it accrues — so the
+same floor is drawn as one rising curve with the area filled beneath it, in mint
+only, with no red bar.
 
 Two conventions are load-bearing and easy to break:
 

@@ -16,7 +16,7 @@ const queryClient = new QueryClient();
  * but the connect / account / chain dialogs are RainbowKit's DOM — these are the
  * knobs that reach them, topped up by the `--rk-*` overrides in index.css. */
 const rainbowTheme = darkTheme({
-  accentColor: "#38C0F8",
+  accentColor: "#2FD4B6",
   accentColorForeground: "#041220",
   borderRadius: "small",
   overlayBlur: "small",
