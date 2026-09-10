@@ -1,0 +1,1250 @@
+@import "./styles/fonts.css";
+@import "./styles/tokens.css";
+@import "./styles/background.css";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Brabo Staking — interface.
+
+   Same design system as Brabo Markets: identity from the bull (navy ground,
+   cyan eyes, gold horns); structure from morpho.org — depth comes from
+   hairlines on flat fills, never shadows or gradients; one accent used
+   sparingly; wide display type; every figure in mono; a visible ruled grid.
+
+   What differs from the Markets stylesheet is only what this product actually
+   is: a single page with three interactive panels (stake / rewards / unstake),
+   its own stat set, and section-anchor tabs instead of route tabs.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* The ground lives on <html>, not <body>: index.html paints it inline so the
+ * first frame is already the brand, and an opaque <body> would paint over
+ * `.ambient` (a z-index:-1 child) and the backdrop would silently vanish. */
+html {
+  background: var(--abyss);
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--t-14);
+  line-height: 1.6;
+  font-feature-settings: "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display voice: wide and heavy, not light and neutral. Archivo's width axis
+ * is doing the work — a wide grotesque reads like a market board. */
+h1, h2, h3, h4 {
+  font-weight: 700;
+  font-stretch: var(--wide);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(40px, 2.2rem + 4.6vw, 82px);
+  font-stretch: var(--wider);
+  text-transform: uppercase;
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+}
+
+h2 { font-size: clamp(26px, 1.4rem + 1.6vw, 38px); }
+h3 { font-size: var(--t-24); }
+h4 { font-size: var(--t-16); letter-spacing: -0.02em; }
+
+p { margin: 0 0 1em; text-wrap: pretty; }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--cyan); text-decoration: none; }
+a:hover { color: var(--cyan-hi); }
+
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 1px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+::selection { background: var(--cyan-tint); color: #fff; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--r-pill);
+}
+
+/* ── Micro-label ─────────────────────────────────────────────────────────────
+   Set in the mono face at normal case rather than uppercase — quieter, and it
+   reads as data rather than as a heading. Every small label uses this. */
+.stat-label,
+.input-label,
+.address-label,
+.navbar-tagline,
+.info-label,
+.rewards-label,
+.panel-meta,
+.tier-threshold,
+.status-badge.verified {
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-3);
+}
+
+/* Every figure in the app is mono and tabular: amounts line up in a column and
+ * don't jitter as they count up. */
+.stat-value,
+.stat-subvalue,
+.info-value,
+.rewards-amount,
+.panel-meta-value,
+.tier-threshold,
+.tier-apr,
+.contract-address,
+.token-input {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Navbar ───────────────────────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 64px;
+  padding: 0 24px;
+  background: rgba(4, 14, 28, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--hair);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  min-width: 0;
+}
+
+.navbar-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - var(--chamfer-sm)) 0, 100% var(--chamfer-sm), 100% 100%, 0 100%);
+  object-fit: cover;
+  background: var(--surface);
+  transition: filter var(--t-mid) var(--ease);
+}
+
+.navbar-brand:hover .navbar-logo { filter: brightness(1.15); }
+
+.navbar-wordmark { display: flex; align-items: baseline; gap: 9px; min-width: 0; }
+
+.navbar-title {
+  font-size: var(--t-16);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.navbar-tagline { white-space: nowrap; }
+
+/* ── The tape ────────────────────────────────────────────────────────────────
+   Every figure on it is already fetched for the stats grid, so it costs no
+   extra RPC calls — it just puts the protocol's numbers where a trading
+   product puts them. Real data, not decoration. */
+.ticker {
+  display: flex;
+  align-items: stretch;
+  height: 34px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--abyss-2);
+  overflow: hidden;
+}
+
+.ticker-badge {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 16px 0 24px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
+  background: var(--gold);
+  color: #1c1206;
+  font-family: var(--font-mono);
+  font-size: var(--t-11);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.ticker-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 60px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 60px), transparent 100%);
+}
+
+/* Two identical rows translated by exactly -50% — that is what makes the loop
+   seamless at any width. */
+.ticker-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: tape 64s linear infinite;
+}
+
+.ticker:hover .ticker-track { animation-play-state: paused; }
+
+@keyframes tape {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.ticker-row { display: flex; align-items: center; }
+
+.ticker-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 0 20px;
+  border-right: 1px solid var(--hair);
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  white-space: nowrap;
+}
+
+.ticker-key { color: var(--ink-3); letter-spacing: 0.08em; }
+.ticker-val { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* A marquee is exactly the kind of persistent motion this setting exists to
+   stop. It becomes a static, scrollable strip instead of a faster animation. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-viewport { overflow-x: auto; scrollbar-width: none; }
+  .ticker-viewport::-webkit-scrollbar { display: none; }
+  .ticker-track { animation: none; }
+  .ticker-row[aria-hidden="true"] { display: none; }
+}
+
+/* ── Section nav ──────────────────────────────────────────────────────────────
+   Brabo Markets has five routes here; this product is one page, so the tabs
+   jump to sections instead. Same underline-on-the-rule treatment either way. */
+.page-nav {
+  position: sticky;
+  top: 64px;
+  z-index: 40;
+  display: flex;
+  gap: 2px;
+  padding: 0 24px;
+  background: rgba(4, 14, 28, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--hair);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.page-nav::-webkit-scrollbar { display: none; }
+
+.page-nav-tab {
+  position: relative;
+  padding: 14px 14px 13px;
+  color: var(--ink-3);
+  font-size: var(--t-14);
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.page-nav-tab:hover { color: var(--ink); }
+
+.page-nav-tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--cyan);
+}
+
+/* ── Shell ────────────────────────────────────────────────────────────────────
+   The content column is framed by hairlines, so the page reads as a drawn plan.
+   Below the frame width the rules would sit on the viewport edge, so drop them. */
+.main-container {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 32px 120px;
+}
+
+@media (min-width: 1216px) {
+  .main-container {
+    border-left: 1px solid var(--hair);
+    border-right: 1px solid var(--hair);
+  }
+}
+
+/* Sections stack against full-width rules instead of floating on margins.
+ * `scroll-margin-top` clears the sticky navbar + ticker + tabs (64+34+45) so an
+ * anchor jump doesn't park the heading underneath them. */
+.hero-section,
+.stats-section,
+.actions-section,
+.tiers-section,
+.how-it-works,
+.contracts-section {
+  padding: 56px 0;
+  border-bottom: 1px solid var(--hair);
+  scroll-margin-top: 148px;
+}
+
+.page-content > *:last-child { border-bottom: none; }
+
+/* ── Hero ────────────────────────────────────────────────────────────────────
+   Asymmetric on purpose: copy pinned left, the bull bleeding off the right
+   edge. A centred stack is the layout every generated landing page arrives at. */
+.hero-section {
+  position: relative;
+  padding: 96px 0 80px;
+  text-align: left;
+  overflow: visible;
+}
+
+.hero-copy { position: relative; z-index: 1; max-width: 660px; }
+
+/* The mascot watching. Cropped by the viewport rather than framed, masked so it
+   dissolves into the ground instead of sitting on it as a picture. */
+.hero-bull {
+  position: absolute;
+  top: 50%;
+  right: -140px;
+  width: min(620px, 52vw);
+  height: auto;
+  transform: translateY(-50%);
+  --bull-o: 0.75;
+  opacity: var(--bull-o);
+  pointer-events: none;
+  user-select: none;
+  -webkit-mask-image: radial-gradient(ellipse 62% 62% at 62% 50%, #000 30%, transparent 76%);
+  mask-image: radial-gradient(ellipse 62% 62% at 62% 50%, #000 30%, transparent 76%);
+  animation: bull-settle 1.4s var(--ease-out) both;
+}
+
+@keyframes bull-settle {
+  from { opacity: 0; transform: translateY(-50%) scale(1.04); }
+  to   { opacity: var(--bull-o); transform: translateY(-50%) scale(1); }
+}
+
+@media (max-width: 900px) {
+  .hero-bull {
+    right: -22%;
+    width: 74vw;
+    --bull-o: 0.3;
+  }
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 13px 5px 11px;
+  margin-bottom: 30px;
+  border: 1px solid var(--hair-2);
+  clip-path: polygon(0 0, calc(100% - var(--chamfer-sm)) 0, 100% var(--chamfer-sm), 100% 100%, 0 100%);
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+
+.hero-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2.4s var(--ease) infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.hero-title { margin-bottom: 24px; }
+
+/* Gold, not cyan. Cyan is the action colour and a headline is not an action —
+   using it here is what makes an accent stop meaning anything. */
+.hero-title .accent { color: var(--gold); -webkit-text-stroke: 0; }
+
+.hero-subtitle {
+  color: var(--ink-2);
+  font-size: clamp(15px, 0.95rem + 0.4vw, 19px);
+  line-height: 1.55;
+  max-width: 46ch;
+  margin: 0;
+  min-height: 3.1em; /* reserves the typewriter's height — no layout shift */
+}
+
+.hero-note {
+  margin: 18px 0 0;
+  color: var(--ink-3);
+  font-size: var(--t-13);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────
+   Flat fills. No gradient, no glow, no shine sweep — the restraint is most of
+   why the system reads as infrastructure rather than as a launch page. */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 22px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+  font-family: inherit;
+  font-size: var(--t-14);
+  font-weight: 600;
+  font-stretch: 106%;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #041220;
+  background: var(--cyan);
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.action-btn:hover:not(:disabled) { background: var(--cyan-hi); }
+.action-btn:active:not(:disabled) { background: var(--cyan-dim); }
+
+.action-btn:disabled {
+  background: transparent;
+  border-color: var(--hair);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+/* Unstaking is the exit path, so it is outlined rather than filled — the one
+   control on the page that should not compete with staking for the eye. */
+.action-btn.is-exit:not(:disabled) {
+  background: transparent;
+  border-color: var(--hair-2);
+  color: var(--ink);
+}
+
+.action-btn.is-exit:not(:disabled):hover {
+  background: var(--surface-3);
+  border-color: var(--hair-3);
+}
+
+.max-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--hair-2);
+  color: var(--ink-3);
+  border-radius: var(--r-xs);
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--t-11);
+  cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.max-btn:hover { border-color: var(--hair-3); color: var(--ink); }
+
+/* ── Stats ───────────────────────────────────────────────────────────────────
+   One ruled block, not six floating cards: the 1px grid gap lets the
+   container's hairline colour show through as the divider, so cells share
+   their edges.
+
+   Six stats, and the column count is always a divisor of six — a track with no
+   card in it isn't empty, it's a slab of the container fill, so `auto-fit`
+   would paint grey patches beside the cards at in-between widths. 3/2/1 all
+   divide 6, so the last row is always full. */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--hair);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+@media (max-width: 860px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .stats-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.stat-card {
+  background: var(--surface);
+  padding: 20px;
+  transition: background var(--t-mid) var(--ease);
+}
+
+.stat-card:hover { background: var(--surface-2); }
+
+.stat-label { margin-bottom: 10px; }
+
+.stat-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--t-24);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  /* Never `anywhere`: that would split `3,274.06` across two lines after the
+     tenths digit, and the first line then reads as a complete — and wrong —
+     number. A figure is a single token. */
+  overflow-wrap: normal;
+}
+
+.stat-unit { color: var(--ink-3); font-size: var(--t-16); }
+
+.stat-subvalue {
+  font-size: var(--t-12);
+  color: var(--ink-3);
+  margin-top: 6px;
+}
+
+/* Gold marks earned status, never an action — same rule as the tier cards. */
+.stat-subvalue.is-boosted { color: var(--gold-hi); }
+
+.stat-icon { width: 28px; height: 28px; }
+
+/* ── Action panels ───────────────────────────────────────────────────────────
+   Stake / Rewards / Unstake, in the same shared-edge grid as the stats block so
+   the three read as one instrument rather than three floating cards. */
+/* `minmax(0, 1fr)`, never a bare `1fr`. A bare `1fr` is `minmax(auto, 1fr)`, and
+   that `auto` floor is the item's min-content width — the panel header is a
+   nowrap flex row, which put the floor at 399px inside a 358px grid and pushed
+   every panel past the right edge of the phone. Zeroing the floor lets the track
+   take the container's width and the content wrap inside it. */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--hair);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+@media (max-width: 900px) { .cards-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  padding: 22px 20px 24px;
+  transition: background var(--t-mid) var(--ease);
+}
+
+.panel:hover { background: var(--surface-2); }
+
+.panel-header { margin-bottom: 20px; }
+
+.panel-title { font-size: var(--t-16); font-weight: 500; margin: 0 0 4px; }
+
+.panel-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px; min-width: 0; }
+.panel-meta-value { color: var(--ink-2); font-size: var(--t-12); }
+
+.input-label { display: block; margin-bottom: 8px; }
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--abyss-2);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r);
+  padding: 7px 7px 7px 12px;
+  transition: border-color var(--t-fast) var(--ease);
+}
+
+.input-wrapper:focus-within { border-color: var(--cyan); }
+
+.token-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--ink);
+  font-size: var(--t-20);
+  padding: 6px 0;
+}
+
+.token-input::placeholder { color: var(--ink-3); }
+
+.token-input::-webkit-outer-spin-button,
+.token-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.token-input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+/* ── Rewards readout ─────────────────────────────────────────────────────── */
+.rewards-display {
+  background: var(--abyss-2);
+  border: 1px solid var(--hair);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.rewards-label { display: block; margin-bottom: 8px; }
+
+.rewards-value { display: flex; align-items: baseline; gap: 8px; }
+
+.rewards-amount {
+  font-size: var(--t-32);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.rewards-unit { color: var(--ink-3); font-size: var(--t-14); font-family: var(--font-mono); }
+
+/* ── In-panel figures ────────────────────────────────────────────────────── */
+.info-grid {
+  border-top: 1px solid var(--hair);
+  margin-top: 18px;
+  padding-top: 6px;
+  margin-bottom: 18px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  padding: 7px 0;
+}
+
+.info-value { color: var(--ink-2); font-size: var(--t-13); text-align: right; min-width: 0; }
+.info-value.is-accent { color: var(--cyan); }
+.info-value.is-earned { color: var(--gold-hi); }
+
+/* The notice under each panel. A quiet rule-and-text line, not a tinted box. */
+.card-notice {
+  margin-top: auto;
+  padding-top: 16px;
+  position: relative;
+  padding-left: 16px;
+  color: var(--ink-3);
+  font-size: var(--t-12);
+  line-height: 1.5;
+}
+
+.card-notice::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(16px + 0.68em);
+  width: 6px;
+  height: 1px;
+  background: var(--ink-3);
+}
+
+.card-notice.warning::before { background: var(--amber); }
+.card-notice.success::before { background: var(--green); }
+
+/* ── Section headings ─────────────────────────────────────────────────────── */
+.section-title {
+  position: relative;
+  font-size: var(--t-24);
+  padding-left: 22px;
+  margin-bottom: 24px;
+}
+
+/* The horn tick: a short gold diagonal, the same angle as the chamfer. One
+   mark, reused as the section marker across the whole app. */
+.section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.18em;
+  width: 3px;
+  height: 0.82em;
+  background: var(--gold);
+  transform: skewX(-16deg);
+}
+
+.section-lede {
+  color: var(--ink-2);
+  font-size: var(--t-14);
+  max-width: 62ch;
+  margin: -12px 0 24px;
+}
+
+/* ── Tiers ────────────────────────────────────────────────────────────────────
+   Three tiers, so the same divisor rule as .stats-grid: 3 columns or 1, never
+   2 — two columns would leave the third tier alone beside an orphan track. */
+.tier-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--hair);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+@media (max-width: 560px) { .tier-cards-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.tier-card {
+  position: relative;
+  background: var(--surface);
+  padding: 22px 20px;
+  text-align: left;
+  color: var(--ink-3);
+  transition: background var(--t-mid) var(--ease), color var(--t-mid) var(--ease);
+}
+
+.tier-card:hover { background: var(--surface-2); }
+
+/* Gold marks status you earned. It is never used on anything clickable. */
+.tier-card.unlocked {
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.tier-card.unlocked::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-top: var(--chamfer) solid var(--gold);
+  border-left: var(--chamfer) solid transparent;
+  opacity: 0.85;
+}
+
+/* ── Tier medallions ─────────────────────────────────────────────────────────
+   The three tier SVGs each carry their own dark square ground, a shade off our
+   panel fill. Left bare that reads as a mismatched tile, so every medallion is
+   framed the way the brand mark is — horn cut, hairline edge. Locked tiers are
+   desaturated rather than hidden: you should see what you're working toward. */
+.tier-icon,
+.stat-icon,
+.nft-medallion {
+  clip-path: polygon(0 0, calc(100% - var(--chamfer-sm)) 0, 100% var(--chamfer-sm), 100% 100%, 0 100%);
+  background: var(--abyss-2);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.tier-icon {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  filter: grayscale(1) opacity(0.38);
+  transition: filter var(--t-mid) var(--ease);
+}
+
+.tier-card.unlocked .tier-icon { filter: none; }
+
+/* Hovering a locked tier lifts it most of the way: the metal reads as bronze,
+   silver or gold rather than grey. It stops short of full colour on purpose —
+   an earned tier still has somewhere to go. */
+.tier-card:hover .tier-icon {
+  filter: grayscale(0.28) opacity(0.9) saturate(1.18) brightness(1.08);
+}
+
+/* An earned tier already sits at full colour, so its hover comes from the metal
+   itself. Specificity matters: without this the plain `:hover` above wins on
+   source order (both score 0,3,0) and hovering an earned tier would
+   *desaturate* it. (0,4,0) settles it in either order. */
+.tier-card.unlocked:hover .tier-icon { filter: saturate(1.3) brightness(1.16); }
+
+.tier-name { display: block; font-size: var(--t-14); font-weight: 500; margin-bottom: 3px; }
+.tier-apr { display: block; font-size: var(--t-13); color: var(--ink-2); margin-bottom: 3px; }
+.tier-card.unlocked .tier-apr { color: var(--gold-hi); }
+.tier-threshold { display: block; }
+
+.tier-status {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  color: var(--ink-3);
+}
+
+.tier-card.unlocked .tier-status { color: var(--gold-hi); }
+
+/* ── How it works ─────────────────────────────────────────────────────────── */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1px;
+  background: var(--hair);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.step-card {
+  background: var(--surface);
+  padding: 22px 20px 24px;
+  transition: background var(--t-mid) var(--ease);
+}
+
+.step-card:hover { background: var(--surface-2); }
+
+/* Numbering is real here — staking genuinely is a four-step sequence — so it
+ * stays, but as a quiet mono index rather than a filled badge. */
+.step-number {
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  color: var(--cyan);
+  margin-bottom: 14px;
+}
+
+.step-number::before { content: "0"; }
+
+.step-title { font-size: var(--t-14); font-weight: 500; margin-bottom: 6px; }
+.step-description { color: var(--ink-3); font-size: var(--t-13); margin: 0; }
+
+/* ── Contracts ───────────────────────────────────────────────────────────── */
+.contracts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px;
+  background: var(--hair);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.contract-card {
+  background: var(--surface);
+  padding: 22px 20px;
+  transition: background var(--t-mid) var(--ease);
+}
+
+.contract-card:hover { background: var(--surface-2); }
+
+.contract-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.contract-name { margin: 10px 0 4px; font-size: var(--t-16); }
+.contract-description { color: var(--ink-3); font-size: var(--t-13); margin-bottom: 16px; }
+.address-label { display: block; margin-bottom: 6px; }
+
+.address-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--abyss-2);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  padding: 7px 7px 7px 11px;
+  margin-bottom: 14px;
+}
+
+.contract-address {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-12);
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contract-link { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-13); }
+.contract-link::after { content: "↗"; transition: transform var(--t-fast) var(--ease); }
+.contract-link:hover::after { transform: translate(2px, -2px); }
+
+.status-badge.verified {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: var(--r-xs);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  font-size: var(--t-11);
+  background: transparent;
+  color: var(--green);
+}
+
+/* ── Skeletons ────────────────────────────────────────────────────────────── */
+.skeleton {
+  display: inline-block;
+  min-width: 4.5ch;
+  width: 65%;
+  height: 0.85em;
+  vertical-align: middle;
+  border-radius: var(--r-xs);
+  background: var(--surface-3);
+  animation: breathe 1.6s var(--ease) infinite;
+}
+
+@keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  max-width: min(400px, calc(100vw - 32px));
+  padding: 13px 16px;
+  border-radius: var(--r);
+  background: var(--surface-2);
+  border: 1px solid var(--hair-2);
+  border-left: 2px solid var(--ink-3);
+  color: var(--ink);
+  font-size: var(--t-13);
+  animation: toast-in 260ms var(--ease-out) both;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.toast.success { border-left-color: var(--green); }
+.toast.error   { border-left-color: var(--red); }
+
+/* ── Transaction overlay ─────────────────────────────────────────────────────
+   Flat, like everything else: a dimmed ground and a mono line. No card, no
+   shadow — the page is simply busy. */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: rgba(2, 8, 18, 0.78);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--t-mid) var(--ease), visibility var(--t-mid);
+}
+
+.loading-overlay.active { opacity: 1; visibility: visible; }
+
+.loading-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--hair-2);
+  border-top-color: var(--cyan);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  letter-spacing: 0.04em;
+}
+
+/* ── Wallet control ──────────────────────────────────────────────────────────
+   Our markup (components/layout/WalletButton), so it can use the same horn cut,
+   the same flat cyan and the same mono figures as everything else. RainbowKit
+   only supplies the state and the modals. */
+.wallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity var(--t-mid) var(--ease);
+}
+
+.wallet-connect {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 9px 18px;
+  border: 1px solid transparent;
+  clip-path: polygon(0 0, calc(100% - var(--chamfer-sm)) 0, 100% var(--chamfer-sm), 100% 100%, 0 100%);
+  background: var(--cyan);
+  color: #041220;
+  font-family: inherit;
+  font-size: var(--t-13);
+  font-weight: 600;
+  font-stretch: 106%;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.wallet-connect:hover { background: var(--cyan-hi); }
+.wallet-connect:active { background: var(--cyan-dim); }
+
+/* Clipped elements cannot paint an outline, so the focus ring goes inside. */
+.wallet-connect:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px #041220, inset 0 0 0 4px var(--cyan-hi);
+}
+
+/* A wrong network is a blocker, not a decoration — it takes the error colour
+   outright rather than a subtle tint nobody notices. */
+.wallet-connect.is-wrong { background: var(--red); color: #2a0812; }
+.wallet-connect.is-wrong:hover { background: #ff93a5; }
+
+.wallet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+
+.wallet-chip:hover { border-color: var(--hair-3); background: var(--surface-2); }
+
+.wallet-chain-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.wallet-chain-name { color: var(--ink-2); }
+
+/* The connection indicator, same green as the hero eyebrow's. */
+.wallet-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.wallet-account { padding-left: 12px; }
+.wallet-name { font-variant-numeric: tabular-nums; }
+.wallet-pending { display: inline-flex; }
+
+.wallet-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--hair-2);
+  border-top-color: var(--gold);
+  animation: spin 700ms linear infinite;
+}
+
+/* The chain chip is the first thing to go when space is tight — the account
+   chip is the one people actually need to reach. */
+@media (max-width: 640px) {
+  .wallet-chain-name { display: none; }
+  .wallet-chain { padding: 8px 10px; }
+  .wallet-connect { padding: 9px 14px; font-size: var(--t-12); }
+}
+
+@media (max-width: 400px) {
+  .wallet-chain { display: none; }
+}
+
+/* ── RainbowKit modals ───────────────────────────────────────────────────────
+   The dialogs are RainbowKit's own DOM (vanilla-extract, content-hashed class
+   names), so these variables are the whole surface area available.
+
+   The selector is doubled deliberately. RainbowKit injects its own
+   `[data-rk]{…}` <style> at runtime, so it lands *after* this stylesheet at
+   identical specificity and wins on source order — a plain `[data-rk]` block
+   here would do nothing at all. `[data-rk][data-rk]` scores (0,2,0) against
+   their (0,1,0) and wins regardless of injection order. */
+[data-rk][data-rk] {
+  --rk-fonts-body: var(--font-sans);
+  --rk-radii-modal: var(--r-lg);
+  --rk-radii-modalMobile: var(--r-lg);
+  --rk-radii-menuButton: var(--r-sm);
+  --rk-radii-actionButton: var(--r-sm);
+  --rk-radii-connectButton: var(--r-sm);
+
+  --rk-colors-modalBackground: var(--surface);
+  --rk-colors-modalBorder: var(--hair-2);
+  --rk-colors-modalBackdrop: rgba(2, 8, 18, 0.72);
+  --rk-colors-modalText: var(--ink);
+  --rk-colors-modalTextSecondary: var(--ink-2);
+  --rk-colors-modalTextDim: var(--ink-3);
+  --rk-colors-generalBorder: var(--hair);
+  --rk-colors-generalBorderDim: var(--hair);
+  --rk-colors-menuItemBackground: var(--surface-2);
+  --rk-colors-profileForeground: var(--surface-2);
+  --rk-colors-profileAction: var(--surface-3);
+  --rk-colors-profileActionHover: #1b3355;
+  --rk-colors-actionButtonBorder: var(--hair);
+  --rk-colors-actionButtonBorderMobile: var(--hair);
+  --rk-colors-actionButtonSecondaryBackground: var(--surface-3);
+  --rk-colors-closeButton: var(--ink-3);
+  --rk-colors-closeButtonBackground: var(--surface-3);
+  --rk-colors-selectedOptionBorder: var(--cyan-tint);
+  --rk-colors-connectionIndicator: var(--green);
+  --rk-colors-error: var(--red);
+  --rk-colors-standby: var(--gold);
+
+  /* No shadows anywhere else in this interface; the modal borrows the same
+     rule and separates from the page with its backdrop instead. */
+  --rk-shadows-dialog: none;
+  --rk-shadows-profileDetailsAction: none;
+  --rk-shadows-selectedOption: none;
+  --rk-shadows-selectedWallet: none;
+  --rk-shadows-walletLogo: none;
+  --rk-shadows-connectButton: none;
+}
+
+/* ── Utilities ────────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .navbar { height: 56px; padding: 0 16px; }
+  .navbar-logo { width: 28px; height: 28px; }
+  .navbar-tagline { display: none; }
+  .page-nav { top: 56px; padding: 0 16px; }
+  .page-nav-tab { padding: 12px 11px 11px; }
+  .main-container { padding: 0 16px 80px; }
+  .hero-section { padding: 48px 0 44px; }
+  .hero-section,
+  .stats-section,
+  .actions-section,
+  .tiers-section,
+  .how-it-works,
+  .contracts-section {
+    padding-top: 40px;
+    padding-bottom: 40px;
+    scroll-margin-top: 132px;
+  }
+  .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; }
+}
+
+/* ── Crash panel ─────────────────────────────────────────────────────────────
+   components/ui/ErrorBoundary. Deliberately plain: no chamfer, no accent fill,
+   no animation. A failure state should not look designed — it should look like
+   the machine telling you something. */
+.crash {
+  display: grid;
+  place-items: center;
+  min-height: 70vh;
+  padding: 40px 20px;
+}
+
+.crash-panel {
+  width: min(620px, 100%);
+  padding: 30px;
+  background: var(--surface);
+  border: 1px solid var(--hair-2);
+}
+
+.crash-label {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--red);
+  font-family: var(--font-mono);
+  font-size: var(--t-11);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.crash-title {
+  margin: 0 0 10px;
+  font-size: var(--t-24);
+  font-stretch: var(--wide);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.crash-copy {
+  margin: 0 0 20px;
+  max-width: 46ch;
+  color: var(--ink-2);
+  font-size: var(--t-14);
+  line-height: 1.6;
+}
+
+.crash-detail {
+  margin: 0 0 22px;
+  padding: 14px;
+  max-height: 220px;
+  overflow: auto;
+  background: var(--abyss-2);
+  border: 1px solid var(--hair);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.crash-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.crash-btn {
+  padding: 11px 18px;
+  background: var(--cyan);
+  border: 1px solid var(--cyan);
+  color: #041220;
+  font-family: var(--font-mono);
+  font-size: var(--t-12);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.crash-btn:hover { background: var(--cyan-hi); border-color: var(--cyan-hi); }
+
+.crash-btn.is-ghost {
+  background: transparent;
+  border-color: var(--hair-2);
+  color: var(--ink-2);
+}
+
+.crash-btn.is-ghost:hover { border-color: var(--hair-3); color: var(--ink); }

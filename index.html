@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#040e1c" />
+    <title>Brabo Staking — Stake $BRB, Earn Rewards</title>
+    <link rel="icon" type="image/png" href="/brand/brabo-bull-64.png" />
+    <!-- Painted inline so the very first frame is already the brand ground
+         rather than white. The stylesheet repeats this on <html>; setting it
+         on <body> instead would let an opaque body paint over `.ambient`,
+         which is a z-index:-1 child, and the backdrop would vanish. -->
+    <style>
+      html { background: #040e1c; color-scheme: dark; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
